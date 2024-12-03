@@ -1,0 +1,2 @@
+Users can exit the modal window by clicking out of it, using the x button, or by pressing escape<br>
+styles.css has been changed to give the site a darkmode color scheme. Text colors have been changed to lighter colors and background colors have been changed to darker colors

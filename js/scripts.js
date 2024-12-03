@@ -1,12 +1,13 @@
 const galleryContainer = document.querySelector('#gallery');
 const body = document.querySelector('body');
 const modalRoot = document.querySelector('#modal-root');
+const searchContainer = document.querySelector('.search-container');
 let users = []
 
 //Fetches 12 random users from randomuser.me api and appends the html generated with createGalleryCard
 async function displayUsers() {
     try {
-        const response = await fetch('https://randomuser.me/api/?results=12');
+        const response = await fetch('https://randomuser.me/api/?results=12&nat=us');
         const json = await response.json();
         users = json.results;
         users.forEach((user) => {
@@ -73,8 +74,36 @@ modalRoot.addEventListener('click', (e) => {
         //First part is for close button, everything after || is to allow clicking out of the modal
         if (e.target.closest('.modal-close-btn') !== null || (e.target.closest('.modal') === null && e.target.closest('.modal-btn-container') === null))
             modal.remove();
+
+        //Modal toggle functionality
+        if (e.target.closest('#modal-prev')) {
+            modalSwapUser(false);
+        }
+        if (e.target.closest('#modal-next')) {
+            modalSwapUser(true);
+        }
     }
 });
+
+//Find where current selected user is in array, then find next/prev user and swap in new modal
+function modalSwapUser(goToNextUser) {
+    const user = users.find((user) => `modal-${user.login.username}` === document.querySelector('.modal-name').id);
+    let userToDisplay;
+    const idx = users.indexOf(user);
+    if (goToNextUser) {
+        if (idx + 1 >= users.length)
+            userToDisplay = users[0]
+        else
+            userToDisplay = users[idx + 1]
+    } else {
+        if (idx - 1 <= -1)
+            userToDisplay = users[users.length - 1]
+        else
+            userToDisplay = users[idx - 1]
+    }
+    document.querySelector('.modal-container').remove();
+    modalRoot.insertAdjacentHTML('beforeend', createModalWindow(userToDisplay));
+}
 
 //Clicking on card opens modal functionality
 galleryContainer.addEventListener('click', (e) => {
@@ -84,6 +113,25 @@ galleryContainer.addEventListener('click', (e) => {
         const modalWindow = createModalWindow(user);
         modalRoot.insertAdjacentHTML('beforeend', modalWindow);
     }
+});
+//Add search bar
+searchContainer.insertAdjacentHTML('beforeend', `
+<form action="#" method="get">
+    <input type="search" id="search-input" class="search-input" placeholder="Search...">
+    <input type="submit" value="&#x1F50D;" id="search-submit" class="search-submit">
+</form>`);
+
+//Search functionality
+searchContainer.addEventListener('submit', (e) => {
+    const value = searchContainer.querySelector('#search-input').value.toLowerCase();
+    galleryContainer.innerHTML = '';
+    const filteredUsers = users.filter(user => {
+        const userName = `${user.name.first} ${user.name.last}`;
+        return userName.toLowerCase().includes(value);
+    });
+    filteredUsers.forEach((user) => {
+        galleryContainer.insertAdjacentHTML('beforeend', createGalleryCard(user));
+    });
 });
 
 displayUsers();
